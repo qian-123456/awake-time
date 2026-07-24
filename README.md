@@ -18,9 +18,21 @@ Awake Time 是一个原生 macOS 菜单栏时钟：用户记录的醒来时刻�
 
 - macOS 14 或更高版本
 - Apple Silicon 或 Intel Mac
-- Xcode 16 或与 macOS 14 匹配的 Swift 工具链
 
-## 从源码构建
+## 直接下载安装（不需要 Xcode）
+
+1. 打开 [Releases 页面](https://github.com/qian-123456/awake-time/releases/latest)。
+2. 在 `Assets` 中下载 `Awake-Time-1.0.0-universal.zip`。不要下载 GitHub 自动生成的 `Source code (zip)`，那是源码，不是可直接打开的应用。
+3. 双击 ZIP 解压，得到 `Awake Time.app`。
+4. 把 `Awake Time.app` 拖入“应用程序”。
+5. 第一次打开时，按住 Control 点击应用并选择“打开”。如果系统仍然拦截，进入“系统设置”→“隐私与安全性”，找到 Awake Time 的提示并点击“仍要打开”。
+6. 完成首次引导。之后直接点击菜单栏里的太阳图标和时间。
+
+当前下载包使用本地临时签名，没有 Apple Developer ID 公证，因此第一次打开需要由用户明确确认；这不需要终端或 Xcode。应用不会联网，醒来历史和设置只保存在本机。
+
+## 开发者从源码构建
+
+源码构建需要 Xcode 16 或与 macOS 14 匹配的 Swift 工具链。
 
 1. 安装 Xcode，并在“终端”确认工具链可用：
 
