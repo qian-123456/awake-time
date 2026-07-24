@@ -1,5 +1,5 @@
 ---
-verified_at: 2026-07-24T11:08:00+08:00
+verified_at: 2026-07-24T11:20:00+08:00
 verified_against:
   - README.md
   - Package.swift
@@ -34,7 +34,8 @@ Awake Time 是一个 SwiftUI + AppKit 的 macOS 14+ 菜单栏应用。它把用�
 - SwiftData 本地历史、UserDefaults 偏好、系统通知和 `SMAppService` 登录启动；
 - 简体中文和英文界面；
 - `swift test`：11 项测试通过；正式构建和代码签名验证通过。
-- GitHub 公开仓库、MIT License、贡献指南和 Ice 中文教程已发布。
+- GitHub 公开仓库、MIT License、贡献指南和 Ice 中文教程已发布；
+- v1.0.0 Universal 2 下载包面向普通用户，不要求安装 Xcode。
 
 ## 当前边界
 
@@ -42,6 +43,7 @@ Awake Time 是一个 SwiftUI + AppKit 的 macOS 14+ 菜单栏应用。它把用�
 - 自适应模式只能根据 Mac 事件推断，不能识别人的真实睡眠状态；
 - 应用未运行时无法可靠捕获睡眠、唤醒和解锁顺序；
 - 项目不捆绑 Ice，也不复制 Ice 的代码。Ice 作为独立的菜单栏布局工具使用。
+- 下载包使用临时签名而非 Apple Developer ID 公证，首次打开需要用户在 macOS 中明确确认。
 
 ## 下一步
 
