@@ -1,0 +1,229 @@
+import AppKit
+import AwakeTimeKit
+import SwiftUI
+
+struct MenuPopoverView: View {
+  @EnvironmentObject private var appState: AppState
+
+  var body: some View {
+    Group {
+      if appState.preferences.onboardingComplete {
+        NavigationStack {
+          MenuRootView()
+        }
+      } else {
+        OnboardingView()
+      }
+    }
+    .alert(
+      L10n.text("app.name", appState.language),
+      isPresented: Binding(
+        get: { appState.lastError != nil },
+        set: { if !$0 { appState.clearError() } }
+      )
+    ) {
+      Button("OK") { appState.clearError() }
+    } message: {
+      Text(appState.lastError ?? "")
+    }
+  }
+}
+
+private struct MenuRootView: View {
+  @EnvironmentObject private var appState: AppState
+  @State private var showManualEditor = false
+
+  private var language: AppLanguage { appState.language }
+
+  var body: some View {
+    VStack(spacing: 0) {
+      VStack(spacing: 5) {
+        Text(appState.displayText)
+          .font(.system(size: 42, weight: .medium, design: .rounded))
+          .monospacedDigit()
+          .contentTransition(.numericText())
+        if let wakeAt = appState.currentRecord?.wakeAt {
+          Text(
+            L10n.format(
+              "clock.awakeSince",
+              language,
+              ViewSupport.dateTime(wakeAt, language: language)
+            )
+          )
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        } else {
+          Text(L10n.text("status.notStarted", language))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.top, 18)
+      .padding(.bottom, 14)
+
+      Divider()
+
+      if appState.pendingWakeConfirmation != nil {
+        WakeConfirmationView()
+        Divider()
+      }
+
+      VStack(spacing: 10) {
+        Button {
+          appState.startNewDay()
+        } label: {
+          Label(L10n.text("action.startDay", language), systemImage: "sunrise.fill")
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+
+        Button {
+          showManualEditor = true
+        } label: {
+          Label(L10n.text("action.setWake", language), systemImage: "calendar.badge.clock")
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+
+        HStack {
+          Label(L10n.text("section.mode", language), systemImage: "slider.horizontal.3")
+          Spacer()
+          Picker(
+            "",
+            selection: Binding(
+              get: { appState.preferences.mode },
+              set: { appState.setMode($0) }
+            )
+          ) {
+            ForEach(ClockMode.allCases) { mode in
+              Text(L10n.mode(mode, language)).tag(mode)
+            }
+          }
+          .labelsHidden()
+          .frame(maxWidth: 165)
+        }
+      }
+      .padding(14)
+
+      Divider()
+
+      VStack(spacing: 0) {
+        NavigationLink {
+          HistoryView(isCompact: true)
+        } label: {
+          MenuNavigationRow(
+            title: L10n.text("section.history", language),
+            systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90"
+          )
+        }
+        .buttonStyle(.plain)
+
+        SettingsLink {
+          MenuNavigationRow(
+            title: L10n.text("action.settings", language),
+            systemImage: "gearshape"
+          )
+        }
+        .buttonStyle(.plain)
+
+        Button {
+          NSApplication.shared.terminate(nil)
+        } label: {
+          MenuNavigationRow(
+            title: L10n.text("action.quit", language),
+            systemImage: "power",
+            showsChevron: false
+          )
+        }
+        .buttonStyle(.plain)
+      }
+      .padding(.vertical, 6)
+    }
+    .frame(width: 340)
+    .sheet(isPresented: $showManualEditor) {
+      ManualWakeEditor()
+    }
+  }
+}
+
+private struct WakeConfirmationView: View {
+  @EnvironmentObject private var appState: AppState
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Label(L10n.text("adaptive.question", appState.language), systemImage: "moon.zzz.fill")
+        .font(.headline)
+      Text(L10n.text("adaptive.detail", appState.language))
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      HStack {
+        Button(L10n.text("action.notNow", appState.language)) {
+          appState.dismissPendingWake()
+        }
+        Spacer()
+        Button(L10n.text("action.confirm", appState.language)) {
+          appState.confirmPendingWake()
+        }
+        .buttonStyle(.borderedProminent)
+      }
+    }
+    .padding(14)
+    .background(.orange.opacity(0.08))
+  }
+}
+
+private struct MenuNavigationRow: View {
+  let title: String
+  let systemImage: String
+  var showsChevron = true
+
+  var body: some View {
+    HStack(spacing: 10) {
+      Image(systemName: systemImage)
+        .frame(width: 18)
+        .foregroundStyle(.secondary)
+      Text(title)
+      Spacer()
+      if showsChevron {
+        Image(systemName: "chevron.right")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.tertiary)
+      }
+    }
+    .contentShape(Rectangle())
+    .padding(.horizontal, 14)
+    .frame(height: 34)
+  }
+}
+
+private struct ManualWakeEditor: View {
+  @EnvironmentObject private var appState: AppState
+  @Environment(\.dismiss) private var dismiss
+  @State private var wakeAt = Date()
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      Text(L10n.text("action.setWake", appState.language))
+        .font(.title3.weight(.semibold))
+      DatePicker(
+        L10n.text("clock.awakeSince", appState.language),
+        selection: $wakeAt,
+        in: ...Date(),
+        displayedComponents: [.date, .hourAndMinute]
+      )
+      HStack {
+        Spacer()
+        Button(L10n.text("action.cancel", appState.language)) { dismiss() }
+        Button(L10n.text("action.apply", appState.language)) {
+          if appState.setManualWake(at: wakeAt) { dismiss() }
+        }
+        .buttonStyle(.borderedProminent)
+      }
+    }
+    .padding(20)
+    .frame(width: 390)
+  }
+}
