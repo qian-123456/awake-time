@@ -1,5 +1,5 @@
 ---
-verified_at: 2026-07-24T10:46:00+08:00
+verified_at: 2026-07-24T11:08:00+08:00
 verified_against:
   - README.md
   - Package.swift
@@ -12,13 +12,15 @@ review_after: 2026-08-07
 
 ## 当前阶段
 
-`第一版可用，已准备公开发布`
+`第一版可用，已公开发布`
 
 ## 当前结论
 
 Awake Time 是一个 SwiftUI + AppKit 的 macOS 14+ 菜单栏应用。它把用户记录的醒来时刻视为个人一天的
 `00:00`，按真实经过时长累计，并继续显示 `24:00`、`25:00` 等不封顶时间。数据只使用 SwiftData 和
 系统偏好保存在本机。
+
+公开仓库：<https://github.com/qian-123456/awake-time>
 
 状态栏使用 macOS 原生 `sun.max.fill` 模板图标和等宽数字，显示为“太阳图标 + HH:mm”；尚未开始时为
 “太阳图标 + --:--”。
@@ -32,6 +34,7 @@ Awake Time 是一个 SwiftUI + AppKit 的 macOS 14+ 菜单栏应用。它把用�
 - SwiftData 本地历史、UserDefaults 偏好、系统通知和 `SMAppService` 登录启动；
 - 简体中文和英文界面；
 - `swift test`：11 项测试通过；正式构建和代码签名验证通过。
+- GitHub 公开仓库、MIT License、贡献指南和 Ice 中文教程已发布。
 
 ## 当前边界
 
