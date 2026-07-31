@@ -87,7 +87,7 @@ struct AwakeTimeApplication: App {
 
   init() {
     do {
-      let container = try ModelContainer(for: WakeRecord.self)
+      let container = try AwakeTimeStore.makeContainer()
       modelContainer = container
       let state = AppState(modelContext: container.mainContext)
       _appState = StateObject(wrappedValue: state)

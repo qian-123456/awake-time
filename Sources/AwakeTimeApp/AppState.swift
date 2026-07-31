@@ -152,6 +152,8 @@ final class AppState: ObservableObject {
       reloadRecords()
       return true
     } catch {
+      modelContext.rollback()
+      reloadRecords()
       lastError = L10n.text("error.save", language)
       return false
     }
@@ -163,6 +165,8 @@ final class AppState: ObservableObject {
       try modelContext.save()
       reloadRecords()
     } catch {
+      modelContext.rollback()
+      reloadRecords()
       lastError = L10n.text("error.save", language)
     }
   }
@@ -268,6 +272,8 @@ final class AppState: ObservableObject {
         reloadRecords()
         return existing
       } catch {
+        modelContext.rollback()
+        reloadRecords()
         lastError = L10n.text("error.save", language)
         return nil
       }
@@ -287,7 +293,8 @@ final class AppState: ObservableObject {
       reloadRecords()
       return record
     } catch {
-      modelContext.delete(record)
+      modelContext.rollback()
+      reloadRecords()
       lastError = L10n.text("error.save", language)
       return nil
     }
