@@ -24,6 +24,7 @@ final class AppState: ObservableObject {
 
   private var boundaryTimer: Timer?
   private var minuteTimer: Timer?
+  private var preferencesObservation: AnyCancellable?
 
   private lazy var systemMonitor = SystemEventMonitor(defaults: defaults) {
     [weak self] observation in
@@ -50,6 +51,10 @@ final class AppState: ObservableObject {
     self.modelContext = modelContext
     self.defaults = defaults
     self.preferences = PreferencesStore(defaults: defaults)
+    preferencesObservation = preferences.objectWillChange.sink { [weak self] _ in
+      self?.objectWillChange.send()
+    }
+    requestNotificationAuthorization()
     reloadRecords()
     restorePendingObservation()
     scheduleMinuteBoundary()
@@ -67,6 +72,13 @@ final class AppState: ObservableObject {
   var language: AppLanguage { preferences.language }
   var currentRecord: WakeRecord? { records.first }
   var displayText: String { AwakeClockEngine.formatted(from: currentRecord?.wakeAt, to: now) }
+  var isNight: Bool {
+    AwakeClockEngine.isNight(
+      from: currentRecord?.wakeAt,
+      to: now,
+      sleepDuration: preferences.preferredSleepDuration
+    )
+  }
 
   func setMode(_ mode: ClockMode) {
     preferences.mode = mode
@@ -81,7 +93,23 @@ final class AppState: ObservableObject {
   func setLanguage(_ language: AppLanguage) {
     preferences.language = language
     updateNotificationActionTitles()
+    refreshSleepReminder()
     objectWillChange.send()
+  }
+
+  func setPreferredSleepDuration(_ duration: TimeInterval) {
+    preferences.preferredSleepDuration = PreferencesStore.sleepDurationRange.clamp(duration)
+    refreshSleepReminder()
+  }
+
+  func setSleepReminderEnabled(_ enabled: Bool) {
+    preferences.sleepReminderEnabled = enabled
+    refreshSleepReminder()
+  }
+
+  func setSleepReminderLeadTime(_ leadTime: TimeInterval) {
+    preferences.sleepReminderLeadTime = PreferencesStore.sleepReminderLeadTimeRange.clamp(leadTime)
+    refreshSleepReminder()
   }
 
   func completeOnboarding(launchAtLogin: Bool) {
@@ -325,6 +353,33 @@ final class AppState: ObservableObject {
     descriptor.fetchLimit = 500
     records = (try? modelContext.fetch(descriptor)) ?? []
     now = Date()
+    refreshSleepReminder()
+  }
+
+  private func refreshSleepReminder(referenceDate: Date = Date()) {
+    notifications.cancelSleepReminder()
+    guard preferences.sleepReminderEnabled else { return }
+    guard
+      let reminderDate = AwakeClockEngine.upcomingSleepReminderDate(
+        from: currentRecord?.wakeAt,
+        after: referenceDate,
+        sleepDuration: preferences.preferredSleepDuration,
+        leadTime: preferences.sleepReminderLeadTime
+      )
+    else { return }
+
+    let leadTime = L10n.duration(preferences.sleepReminderLeadTime, language)
+    let bodyKey = preferences.sleepReminderLeadTime == 0
+      ? "sleepReminder.body.now"
+      : "sleepReminder.body.future"
+    let body = preferences.sleepReminderLeadTime == 0
+      ? L10n.text(bodyKey, language)
+      : L10n.format(bodyKey, language, leadTime)
+    notifications.scheduleSleepReminder(
+      at: reminderDate,
+      title: L10n.text("sleepReminder.title", language),
+      body: body
+    )
   }
 
   private func refreshNotificationStatus() {
@@ -386,5 +441,11 @@ final class AppState: ObservableObject {
     UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [
       "wake-confirm"
     ])
+  }
+}
+
+private extension ClosedRange where Bound == TimeInterval {
+  func clamp(_ value: TimeInterval) -> TimeInterval {
+    Swift.min(Swift.max(value, lowerBound), upperBound)
   }
 }

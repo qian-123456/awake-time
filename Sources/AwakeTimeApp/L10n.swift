@@ -23,6 +23,19 @@ enum L10n {
     text("weekday.\(weekday.rawValue)", language)
   }
 
+  static func duration(_ interval: TimeInterval, _ language: AppLanguage) -> String {
+    let totalMinutes = Int(interval) / 60
+    let hours = totalMinutes / 60
+    let minutes = totalMinutes % 60
+    if hours > 0 && minutes > 0 {
+      return format("duration.hoursMinutes", language, hours, minutes)
+    }
+    if hours > 0 {
+      return format("duration.hours", language, hours)
+    }
+    return format("duration.minutes", language, minutes)
+  }
+
   private static let zh: [String: String] = [
     "app.name": "Awake Time",
     "status.notStarted": "尚未开始",
@@ -65,10 +78,24 @@ enum L10n {
     "settings.systemLanguage": "跟随系统",
     "settings.chinese": "简体中文",
     "settings.english": "English",
+    "settings.sleepDuration": "习惯睡眠时长",
+    "settings.sleepDurationValue": "%.1f 小时",
+    "settings.sleepDurationHelp": "醒来后经过可用时间的一半，菜单栏图标会切换为月亮。",
+    "settings.nightStartsAt": "%@ 切换为夜晚",
+    "settings.sleepReminder": "睡觉提醒",
+    "settings.sleepReminderLeadTime": "提前 %@",
+    "settings.sleepReminderAt": "在醒来计时 %@ 时提醒",
+    "settings.sleepReminderHelp": "根据醒来时间和习惯睡眠时长安排系统通知。",
+    "sleepReminder.title": "该睡觉了",
+    "sleepReminder.body.future": "距离计划入睡时间还有 %@。",
+    "sleepReminder.body.now": "已到计划入睡时间。",
+    "duration.hoursMinutes": "%d 小时 %d 分钟",
+    "duration.hours": "%d 小时",
+    "duration.minutes": "%d 分钟",
     "settings.login": "登录后自动运行",
     "settings.loginHelp": "自适应模式只有在应用运行时才能可靠捕获睡眠和解锁。",
     "settings.notification": "通知",
-    "settings.notificationHelp": "用于醒来确认和自动归零后的撤销操作。",
+    "settings.notificationHelp": "用于睡觉提醒、醒来确认和自动归零后的撤销操作。",
     "settings.enableNotifications": "允许通知",
     "settings.openNotificationSettings": "打开系统通知设置",
     "settings.scheduleHelp": "到点自动开始；如果应用晚启动，会按最近一次计划时间补算。",
@@ -141,11 +168,25 @@ enum L10n {
     "settings.systemLanguage": "System Language",
     "settings.chinese": "简体中文",
     "settings.english": "English",
+    "settings.sleepDuration": "Usual Sleep Duration",
+    "settings.sleepDurationValue": "%.1f hours",
+    "settings.sleepDurationHelp": "The menu bar switches to a moon after half of your available time has passed.",
+    "settings.nightStartsAt": "Night at %@",
+    "settings.sleepReminder": "Bedtime Reminder",
+    "settings.sleepReminderLeadTime": "%@ early",
+    "settings.sleepReminderAt": "Remind at awake time %@",
+    "settings.sleepReminderHelp": "Schedules a system notification from your wake time and usual sleep duration.",
+    "sleepReminder.title": "Time for bed",
+    "sleepReminder.body.future": "Your planned bedtime is in %@.",
+    "sleepReminder.body.now": "It is your planned bedtime.",
+    "duration.hoursMinutes": "%d hr %d min",
+    "duration.hours": "%d hr",
+    "duration.minutes": "%d min",
     "settings.login": "Launch at Login",
     "settings.loginHelp":
       "Adaptive mode can reliably observe sleep and unlock only while the app is running.",
     "settings.notification": "Notifications",
-    "settings.notificationHelp": "Used for wake confirmation and undoing automatic resets.",
+    "settings.notificationHelp": "Used for bedtime reminders, wake confirmation, and undoing automatic resets.",
     "settings.enableNotifications": "Allow Notifications",
     "settings.openNotificationSettings": "Open Notification Settings",
     "settings.scheduleHelp":

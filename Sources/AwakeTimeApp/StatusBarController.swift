@@ -11,6 +11,7 @@ final class StatusBarController: NSObject {
   private let popover = NSPopover()
   private var observation: AnyCancellable?
   private var controlWindow: NSWindow?
+  private var displayedIconName: String?
 
   init(appState: AppState, modelContainer: ModelContainer) {
     self.appState = appState
@@ -37,11 +38,6 @@ final class StatusBarController: NSObject {
   private func configureButton() {
     guard let button = statusItem.button else { return }
     button.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
-    button.image = NSImage(
-      systemSymbolName: "sun.max.fill",
-      accessibilityDescription: "Awake Time"
-    )
-    button.image?.isTemplate = true
     button.imagePosition = .imageLeading
     button.imageHugsTitle = true
     button.target = self
@@ -50,8 +46,18 @@ final class StatusBarController: NSObject {
   }
 
   private func updateButton() {
-    statusItem.button?.title = appState.displayText
-    statusItem.button?.setAccessibilityLabel("Awake Time \(appState.displayText)")
+    guard let button = statusItem.button else { return }
+    let iconName = appState.isNight ? "moon.stars.fill" : "sun.max.fill"
+    if displayedIconName != iconName {
+      button.image = NSImage(
+        systemSymbolName: iconName,
+        accessibilityDescription: "Awake Time"
+      )
+      button.image?.isTemplate = true
+      displayedIconName = iconName
+    }
+    button.title = appState.displayText
+    button.setAccessibilityLabel("Awake Time \(appState.displayText)")
   }
 
   func showControlWindow() {

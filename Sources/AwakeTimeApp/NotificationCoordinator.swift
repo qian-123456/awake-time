@@ -8,6 +8,7 @@ final class NotificationCoordinator: NSObject, UNUserNotificationCenterDelegate 
     static let confirmAction = "AWAKE_CONFIRM_ACTION"
     static let dismissAction = "AWAKE_DISMISS_ACTION"
     static let undoAction = "AWAKE_UNDO_ACTION"
+    static let sleepReminder = "sleep-reminder"
   }
 
   var onConfirm: (() -> Void)?
@@ -47,6 +48,29 @@ final class NotificationCoordinator: NSObject, UNUserNotificationCenterDelegate 
     let request = UNNotificationRequest(
       identifier: "wake-auto-\(recordID.uuidString)", content: content, trigger: nil)
     UNUserNotificationCenter.current().add(request)
+  }
+
+  func scheduleSleepReminder(at date: Date, title: String, body: String) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+    let trigger = UNTimeIntervalNotificationTrigger(
+      timeInterval: max(1, date.timeIntervalSinceNow),
+      repeats: false
+    )
+    let request = UNNotificationRequest(
+      identifier: Identifier.sleepReminder,
+      content: content,
+      trigger: trigger
+    )
+    UNUserNotificationCenter.current().add(request)
+  }
+
+  func cancelSleepReminder() {
+    UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [
+      Identifier.sleepReminder
+    ])
   }
 
   func authorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
