@@ -61,6 +61,13 @@ final class AwakeClockEngineTests: XCTestCase {
       16 * 60 * 60
     )
     XCTAssertEqual(
+      AwakeClockEngine.bedtimeDate(
+        from: wake,
+        sleepDuration: 8 * 60 * 60
+      ),
+      wake.addingTimeInterval(16 * 60 * 60)
+    )
+    XCTAssertEqual(
       AwakeClockEngine.sleepReminderStartsAfter(
         sleepDuration: 8 * 60 * 60,
         leadTime: 60 * 60
@@ -95,6 +102,11 @@ final class AwakeClockEngineTests: XCTestCase {
   }
 
   func testSleepReminderRequiresWakeTimeAndClampsNegativeLeadTime() {
+    XCTAssertNil(
+      AwakeClockEngine.bedtimeDate(
+        from: nil,
+        sleepDuration: 8 * 60 * 60
+      ))
     XCTAssertNil(
       AwakeClockEngine.sleepReminderDate(
         from: nil,
@@ -165,5 +177,16 @@ final class AwakeClockEngineTests: XCTestCase {
       AwakeClockEngine.formatted(from: beforeSpringForward, to: afterSpringForward),
       "01:00"
     )
+  }
+
+  func testDayKeyUsesTheProvidedLocalTimeZone() throws {
+    let date = Date(timeIntervalSince1970: 1_775_440_800) // 2026-04-06 01:00 UTC
+    var shanghai = Calendar(identifier: .gregorian)
+    shanghai.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Shanghai"))
+    var losAngeles = Calendar(identifier: .gregorian)
+    losAngeles.timeZone = try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))
+
+    XCTAssertEqual(DayKey.make(for: date, calendar: shanghai), "2026-04-06")
+    XCTAssertEqual(DayKey.make(for: date, calendar: losAngeles), "2026-04-05")
   }
 }

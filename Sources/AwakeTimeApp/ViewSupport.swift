@@ -8,6 +8,7 @@ enum ViewSupport {
       language.resolved == .simplifiedChinese
       ? Locale(identifier: "zh_Hans_CN")
       : Locale(identifier: "en_US")
+    formatter.timeZone = .autoupdatingCurrent
     formatter.dateStyle = .medium
     formatter.timeStyle = .short
     return formatter.string(from: date)
@@ -19,6 +20,7 @@ enum ViewSupport {
       language.resolved == .simplifiedChinese
       ? Locale(identifier: "zh_Hans_CN")
       : Locale(identifier: "en_US")
+    formatter.timeZone = .autoupdatingCurrent
     formatter.timeStyle = .short
     return formatter.string(from: date)
   }

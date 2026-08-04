@@ -269,7 +269,10 @@ private struct ScheduleRow: View {
         selection: Binding(
           get: { dateForSetting },
           set: { date in
-            let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+            let components = Calendar.autoupdatingCurrent.dateComponents(
+              [.hour, .minute],
+              from: date
+            )
             var copy = setting
             copy.hour = components.hour ?? setting.hour
             copy.minute = components.minute ?? setting.minute
@@ -290,7 +293,7 @@ private struct ScheduleRow: View {
     components.day = 1
     components.hour = setting.hour
     components.minute = setting.minute
-    return Calendar.current.date(from: components) ?? Date()
+    return Calendar.autoupdatingCurrent.date(from: components) ?? Date()
   }
 }
 

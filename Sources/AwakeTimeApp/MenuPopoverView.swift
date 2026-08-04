@@ -52,6 +52,17 @@ private struct MenuRootView: View {
           )
           .font(.caption)
           .foregroundStyle(.secondary)
+          if let bedtime = appState.estimatedBedtime {
+            Text(
+              L10n.format(
+                "clock.estimatedBedtime",
+                language,
+                ViewSupport.dateTime(bedtime, language: language)
+              )
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+          }
         } else {
           Text(L10n.text("status.notStarted", language))
             .font(.caption)

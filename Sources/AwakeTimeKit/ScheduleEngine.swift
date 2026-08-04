@@ -4,7 +4,7 @@ public enum ScheduleEngine {
   public static func mostRecentOccurrence(
     before now: Date,
     schedule: WeeklySchedule,
-    calendar: Calendar = .current
+    calendar: Calendar = .autoupdatingCurrent
   ) -> ScheduledOccurrence? {
     for dayOffset in 0...7 {
       guard let candidateDay = calendar.date(byAdding: .day, value: -dayOffset, to: now) else {

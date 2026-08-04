@@ -25,6 +25,7 @@ final class AppState: ObservableObject {
   private var boundaryTimer: Timer?
   private var minuteTimer: Timer?
   private var preferencesObservation: AnyCancellable?
+  private var timeZoneObserver: NSObjectProtocol?
 
   private lazy var systemMonitor = SystemEventMonitor(defaults: defaults) {
     [weak self] observation in
@@ -56,9 +57,11 @@ final class AppState: ObservableObject {
     }
     requestNotificationAuthorization()
     reloadRecords()
+    reconcileLogicalDayKeysWithCurrentTimeZone()
     restorePendingObservation()
     scheduleMinuteBoundary()
     systemMonitor.start()
+    observeTimeZoneChanges()
     updateNotificationActionTitles()
     refreshNotificationStatus()
     evaluateWeeklySchedule()
@@ -67,11 +70,20 @@ final class AppState: ObservableObject {
   deinit {
     boundaryTimer?.invalidate()
     minuteTimer?.invalidate()
+    if let timeZoneObserver {
+      NotificationCenter.default.removeObserver(timeZoneObserver)
+    }
   }
 
   var language: AppLanguage { preferences.language }
   var currentRecord: WakeRecord? { records.first }
   var displayText: String { AwakeClockEngine.formatted(from: currentRecord?.wakeAt, to: now) }
+  var estimatedBedtime: Date? {
+    AwakeClockEngine.bedtimeDate(
+      from: currentRecord?.wakeAt,
+      sleepDuration: preferences.preferredSleepDuration
+    )
+  }
   var isNight: Bool {
     AwakeClockEngine.isNight(
       from: currentRecord?.wakeAt,
@@ -344,6 +356,45 @@ final class AppState: ObservableObject {
       corrected: false,
       sleepDuration: nil
     )
+  }
+
+  private func observeTimeZoneChanges() {
+    timeZoneObserver = NotificationCenter.default.addObserver(
+      forName: .NSSystemTimeZoneDidChange,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        self?.handleTimeZoneChange()
+      }
+    }
+  }
+
+  private func handleTimeZoneChange() {
+    now = Date()
+    reconcileLogicalDayKeysWithCurrentTimeZone()
+    evaluateWeeklySchedule()
+    refreshSleepReminder(referenceDate: now)
+  }
+
+  private func reconcileLogicalDayKeysWithCurrentTimeZone() {
+    var changed = false
+    for record in records {
+      let localDayKey = DayKey.make(for: record.wakeAt)
+      guard record.logicalDayKey != localDayKey else { continue }
+      record.logicalDayKey = localDayKey
+      changed = true
+    }
+    guard changed else { return }
+
+    do {
+      try modelContext.save()
+      reloadRecords()
+    } catch {
+      modelContext.rollback()
+      reloadRecords()
+      lastError = L10n.text("error.save", language)
+    }
   }
 
   private func reloadRecords() {
