@@ -81,6 +81,68 @@ private struct GeneralSettingsView: View {
         .pickerStyle(.segmented)
       }
 
+      Section(L10n.text("settings.sleepDuration", appState.language)) {
+        HStack {
+          Stepper(
+            value: Binding(
+              get: { appState.preferences.preferredSleepDuration },
+              set: { appState.setPreferredSleepDuration($0) }
+            ),
+            in: PreferencesStore.sleepDurationRange,
+            step: 30 * 60
+          ) {
+            Text(sleepDurationText)
+          }
+          Spacer()
+          Text(L10n.format("settings.nightStartsAt", appState.language, nightStartText))
+            .foregroundStyle(.secondary)
+        }
+        Text(L10n.text("settings.sleepDurationHelp", appState.language))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+
+        Toggle(
+          L10n.text("settings.sleepReminder", appState.language),
+          isOn: Binding(
+            get: { appState.preferences.sleepReminderEnabled },
+            set: { appState.setSleepReminderEnabled($0) }
+          )
+        )
+
+        if appState.preferences.sleepReminderEnabled {
+          HStack {
+            Stepper(
+              value: Binding(
+                get: { appState.preferences.sleepReminderLeadTime },
+                set: { appState.setSleepReminderLeadTime($0) }
+              ),
+              in: PreferencesStore.sleepReminderLeadTimeRange,
+              step: 15 * 60
+            ) {
+              Text(
+                L10n.format(
+                  "settings.sleepReminderLeadTime",
+                  appState.language,
+                  L10n.duration(appState.preferences.sleepReminderLeadTime, appState.language)
+                )
+              )
+            }
+            Spacer()
+            Text(
+              L10n.format(
+                "settings.sleepReminderAt",
+                appState.language,
+                sleepReminderTimeText
+              )
+            )
+            .foregroundStyle(.secondary)
+          }
+          Text(L10n.text("settings.sleepReminderHelp", appState.language))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+      }
+
       Section {
         Toggle(
           L10n.text("settings.login", appState.language),
@@ -127,6 +189,30 @@ private struct GeneralSettingsView: View {
     @unknown default:
       return "—"
     }
+  }
+
+  private var sleepDurationText: String {
+    let hours = appState.preferences.preferredSleepDuration / 3_600
+    return L10n.format("settings.sleepDurationValue", appState.language, hours)
+  }
+
+  private var nightStartText: String {
+    let duration = AwakeClockEngine.nightStartsAfter(
+      sleepDuration: appState.preferences.preferredSleepDuration
+    )
+    let hours = Int(duration) / 3_600
+    let minutes = Int(duration) % 3_600 / 60
+    return String(format: "%d:%02d", hours, minutes)
+  }
+
+  private var sleepReminderTimeText: String {
+    let duration = AwakeClockEngine.sleepReminderStartsAfter(
+      sleepDuration: appState.preferences.preferredSleepDuration,
+      leadTime: appState.preferences.sleepReminderLeadTime
+    )
+    let hours = Int(duration) / 3_600
+    let minutes = Int(duration) % 3_600 / 60
+    return String(format: "%02d:%02d", hours, minutes)
   }
 }
 

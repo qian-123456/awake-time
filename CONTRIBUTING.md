@@ -19,6 +19,9 @@
    ./Scripts/build-app.sh
    ```
 
+   该命令会覆盖 `/Applications/Awake Time.app` 并启动新版本。仅生成本地构建包时，使用
+   `AWAKE_TIME_SKIP_INSTALL=1 ./Scripts/build-app.sh`。
+
 4. 检查 `git diff --check`，确认没有绝对本机路径、私人邮箱或秘密。
 5. Pull request 说明行为变化、权限影响、测试结果和未解决风险。
 
