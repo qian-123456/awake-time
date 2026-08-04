@@ -24,6 +24,16 @@ public enum AwakeClockEngine {
     max(0, secondsPerDay - sleepDuration)
   }
 
+  public static func bedtimeDate(
+    from wakeAt: Date?,
+    sleepDuration: TimeInterval
+  ) -> Date? {
+    guard let wakeAt else { return nil }
+    return wakeAt.addingTimeInterval(
+      bedtimeStartsAfter(sleepDuration: sleepDuration)
+    )
+  }
+
   public static func sleepReminderStartsAfter(
     sleepDuration: TimeInterval,
     leadTime: TimeInterval
@@ -71,7 +81,7 @@ public enum AwakeClockEngine {
 }
 
 public enum DayKey {
-  public static func make(for date: Date, calendar: Calendar = .current) -> String {
+  public static func make(for date: Date, calendar: Calendar = .autoupdatingCurrent) -> String {
     let components = calendar.dateComponents([.year, .month, .day], from: date)
     return String(
       format: "%04d-%02d-%02d",

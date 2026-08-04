@@ -56,4 +56,32 @@ final class ScheduleEngineTests: XCTestCase {
         calendar: calendar
       ))
   }
+
+  func testOccurrenceUsesLocalWallClockInProvidedTimeZone() throws {
+    var tokyoCalendar = Calendar(identifier: .gregorian)
+    tokyoCalendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))
+    let now = try XCTUnwrap(
+      tokyoCalendar.date(
+        from: DateComponents(
+          year: 2026, month: 8, day: 4, hour: 9
+        )))
+    var schedule = WeeklySchedule()
+    schedule[.tuesday] = DailySchedule(
+      weekday: .tuesday,
+      isEnabled: true,
+      hour: 8,
+      minute: 15
+    )
+
+    let occurrence = try XCTUnwrap(
+      ScheduleEngine.mostRecentOccurrence(
+        before: now,
+        schedule: schedule,
+        calendar: tokyoCalendar
+      ))
+
+    XCTAssertEqual(occurrence.logicalDayKey, "2026-08-04")
+    XCTAssertEqual(tokyoCalendar.component(.hour, from: occurrence.date), 8)
+    XCTAssertEqual(tokyoCalendar.component(.minute, from: occurrence.date), 15)
+  }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct HistoryView: View {
   @EnvironmentObject private var appState: AppState
+  @Environment(\.dismiss) private var dismiss
   let isCompact: Bool
   @State private var editingRecord: WakeRecord?
   @State private var deletingRecord: WakeRecord?
@@ -12,31 +13,58 @@ struct HistoryView: View {
   }
 
   var body: some View {
-    Group {
-      if appState.records.isEmpty {
-        ContentUnavailableView(
-          L10n.text("history.empty", appState.language),
-          systemImage: "clock.badge.questionmark"
-        )
-      } else {
-        List(appState.records, id: \.id) { record in
-          HistoryRow(record: record)
-            .contentShape(Rectangle())
-            .onTapGesture { editingRecord = record }
-            .contextMenu {
-              Button(L10n.text("history.edit", appState.language)) {
-                editingRecord = record
-              }
-              Divider()
-              Button(L10n.text("action.delete", appState.language), role: .destructive) {
-                deletingRecord = record
-              }
-            }
+    VStack(spacing: 0) {
+      if isCompact {
+        HStack(spacing: 10) {
+          Button {
+            dismiss()
+          } label: {
+            Label(L10n.text("action.back", appState.language), systemImage: "chevron.left")
+          }
+          .buttonStyle(.plain)
+
+          Spacer()
+
+          Text(L10n.text("section.history", appState.language))
+            .font(.headline)
+
+          Spacer()
+
+          Color.clear
+            .frame(width: 54, height: 1)
         }
-        .listStyle(.inset)
+        .padding(.horizontal, 14)
+        .frame(height: 42)
+
+        Divider()
+      }
+
+      Group {
+        if appState.records.isEmpty {
+          ContentUnavailableView(
+            L10n.text("history.empty", appState.language),
+            systemImage: "clock.badge.questionmark"
+          )
+        } else {
+          List(appState.records, id: \.id) { record in
+            HistoryRow(record: record)
+              .contentShape(Rectangle())
+              .onTapGesture { editingRecord = record }
+              .contextMenu {
+                Button(L10n.text("history.edit", appState.language)) {
+                  editingRecord = record
+                }
+                Divider()
+                Button(L10n.text("action.delete", appState.language), role: .destructive) {
+                  deletingRecord = record
+                }
+              }
+          }
+          .listStyle(.inset)
+        }
       }
     }
-    .navigationTitle(L10n.text("section.history", appState.language))
+    .navigationTitle(isCompact ? "" : L10n.text("section.history", appState.language))
     .frame(minWidth: isCompact ? 340 : 500, minHeight: isCompact ? 360 : 380)
     .sheet(item: $editingRecord) { record in
       RecordEditor(record: record)
