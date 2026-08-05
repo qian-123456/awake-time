@@ -42,6 +42,20 @@ final class AwakeClockEngineTests: XCTestCase {
     }
   }
 
+  func testWakeTimeMinuteAdjustmentCarriesAndBorrowsAcrossHours() {
+    let carried = WakeTimeGranularity.addingMinutes(1, toHour: 10, minute: 59)
+    XCTAssertEqual(carried.hour, 11)
+    XCTAssertEqual(carried.minute, 0)
+
+    let borrowed = WakeTimeGranularity.addingMinutes(-1, toHour: 10, minute: 0)
+    XCTAssertEqual(borrowed.hour, 9)
+    XCTAssertEqual(borrowed.minute, 59)
+
+    let wrapped = WakeTimeGranularity.addingMinutes(1, toHour: 23, minute: 59)
+    XCTAssertEqual(wrapped.hour, 0)
+    XCTAssertEqual(wrapped.minute, 0)
+  }
+
   func testNoWakeRecordShowsPlaceholder() {
     XCTAssertEqual(AwakeClockEngine.formatted(from: nil, to: Date()), "--:--")
   }

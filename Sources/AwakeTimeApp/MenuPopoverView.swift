@@ -170,7 +170,7 @@ private struct WakeConfirmationView: View {
         .font(.caption)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
-      HStack {
+      HStack(spacing: 4) {
         Button(L10n.text("action.notNow", appState.language)) {
           appState.dismissPendingWake()
         }
@@ -229,31 +229,54 @@ private struct ManualWakeEditor: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 18) {
+    VStack(alignment: .leading, spacing: 14) {
       Text(L10n.text("action.setWake", appState.language))
-        .font(.title3.weight(.semibold))
-      DatePicker(
-        L10n.text("clock.awakeSince", appState.language),
-        selection: $wakeDay,
-        in: ...Date(),
-        displayedComponents: .date
-      )
-      HStack {
-        Picker("Hour", selection: $wakeHour) {
-          ForEach(0..<24, id: \.self) { hour in
-            Text(String(format: "%02d", hour)).tag(hour)
-          }
-        }
+        .font(.headline)
+
+      VStack(spacing: 4) {
+        Text(String(format: "%02d:%02d", wakeHour, wakeMinute))
+          .font(.system(size: 30, weight: .semibold, design: .rounded))
+          .monospacedDigit()
+        Text(ViewSupport.date(wakeAt, language: appState.language))
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 1)
+
+      Divider()
+        .padding(.vertical, -2)
+
+      HStack(spacing: 6) {
+        Label(L10n.text("settings.time", appState.language), systemImage: "clock")
+        Spacer()
+        TimeUnitControl(
+          values: Array(0..<24),
+          value: $wakeHour,
+          onIncrement: { adjustHour(by: 1) },
+          onDecrement: { adjustHour(by: -1) }
+        )
+        Text(":")
+          .font(.title3.weight(.medium))
+        TimeUnitControl(
+          values: minuteChoices,
+          value: $wakeMinute,
+          onIncrement: { adjustMinute(by: 1) },
+          onDecrement: { adjustMinute(by: -1) }
+        )
+      }
+
+      HStack(spacing: 6) {
+        Label(L10n.text("settings.date", appState.language), systemImage: "calendar")
+        Spacer()
+        DatePicker(
+          "",
+          selection: $wakeDay,
+          in: ...Date(),
+          displayedComponents: .date
+        )
         .labelsHidden()
-        Picker("Minute", selection: $wakeMinute) {
-          ForEach(
-            Array(stride(from: 0, to: 60, by: WakeTimeGranularity.minuteStep)),
-            id: \.self
-          ) { minute in
-            Text(String(format: "%02d", minute)).tag(minute)
-          }
-        }
-        .labelsHidden()
+        .datePickerStyle(.field)
       }
       HStack {
         Spacer()
@@ -264,8 +287,29 @@ private struct ManualWakeEditor: View {
         .buttonStyle(.borderedProminent)
       }
     }
-    .padding(20)
-    .frame(width: 390)
+    .padding(16)
+    .frame(width: 360)
+  }
+
+  private var minuteChoices: [Int] {
+    let regularChoices = Array(
+      stride(from: 0, to: 60, by: WakeTimeGranularity.minuteStep)
+    )
+    return Array(Set(regularChoices + [wakeMinute])).sorted()
+  }
+
+  private func adjustHour(by amount: Int) {
+    wakeHour = (wakeHour + amount + 24) % 24
+  }
+
+  private func adjustMinute(by amount: Int) {
+    let adjusted = WakeTimeGranularity.addingMinutes(
+      amount,
+      toHour: wakeHour,
+      minute: wakeMinute
+    )
+    wakeHour = adjusted.hour
+    wakeMinute = adjusted.minute
   }
 
   private var wakeAt: Date {
@@ -276,5 +320,68 @@ private struct ManualWakeEditor: View {
     components.second = 0
     components.nanosecond = 0
     return calendar.date(from: components) ?? wakeDay
+  }
+}
+
+private struct TimeUnitControl: View {
+  let values: [Int]
+  @Binding var value: Int
+  let onIncrement: () -> Void
+  let onDecrement: () -> Void
+
+  var body: some View {
+    HStack(spacing: 1) {
+      Menu {
+        ForEach(values, id: \.self) { value in
+          Button {
+            self.value = value
+          } label: {
+            Text(String(format: "%02d", value))
+          }
+        }
+      } label: {
+        HStack(spacing: 3) {
+          Text(String(format: "%02d", value))
+            .monospacedDigit()
+          Image(systemName: "chevron.down")
+            .font(.system(size: 8, weight: .semibold))
+        }
+        .frame(width: 38, height: 22)
+        .background(
+          Color.primary.opacity(0.12),
+          in: RoundedRectangle(cornerRadius: 4)
+        )
+      }
+      .menuStyle(.borderlessButton)
+      .buttonStyle(.plain)
+      .menuIndicator(.hidden)
+      .frame(width: 38, height: 22)
+
+      VStack(spacing: 0) {
+        Button(action: onIncrement) {
+          Image(systemName: "chevron.up")
+            .font(.system(size: 9, weight: .semibold))
+            .frame(width: 28, height: 19)
+            .background(
+              Color.primary.opacity(0.12),
+              in: RoundedRectangle(cornerRadius: 4)
+            )
+        }
+        .buttonStyle(.plain)
+        .help("Increase")
+
+        Button(action: onDecrement) {
+          Image(systemName: "chevron.down")
+            .font(.system(size: 9, weight: .semibold))
+            .frame(width: 28, height: 19)
+            .background(
+              Color.primary.opacity(0.12),
+              in: RoundedRectangle(cornerRadius: 4)
+            )
+        }
+        .buttonStyle(.plain)
+        .help("Decrease")
+      }
+    }
   }
 }
