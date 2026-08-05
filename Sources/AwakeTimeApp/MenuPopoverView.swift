@@ -332,12 +332,15 @@ private struct TimeUnitControl: View {
     HStack(spacing: 4) {
       Picker("", selection: $value) {
         ForEach(values, id: \.self) { value in
-          Text(String(format: "%02d", value)).tag(value)
+          Text(String(format: "%02d", value))
+            .monospacedDigit()
+            .tag(value)
         }
       }
       .labelsHidden()
       .pickerStyle(.menu)
       .controlSize(.small)
+      .font(.system(size: 14, weight: .medium, design: .rounded))
       .frame(width: 46, height: 24)
 
       VStack(spacing: 0) {
