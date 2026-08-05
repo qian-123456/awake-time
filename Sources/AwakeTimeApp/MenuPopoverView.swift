@@ -213,7 +213,20 @@ private struct MenuNavigationRow: View {
 private struct ManualWakeEditor: View {
   @EnvironmentObject private var appState: AppState
   @Environment(\.dismiss) private var dismiss
-  @State private var wakeAt = Date()
+  @State private var wakeDay: Date
+  @State private var wakeHour: Int
+  @State private var wakeMinute: Int
+
+  init() {
+    let date = WakeTimeGranularity.floorToStep(Date())
+    let components = Calendar.autoupdatingCurrent.dateComponents(
+      [.hour, .minute],
+      from: date
+    )
+    _wakeDay = State(initialValue: date)
+    _wakeHour = State(initialValue: components.hour ?? 0)
+    _wakeMinute = State(initialValue: components.minute ?? 0)
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
@@ -221,10 +234,27 @@ private struct ManualWakeEditor: View {
         .font(.title3.weight(.semibold))
       DatePicker(
         L10n.text("clock.awakeSince", appState.language),
-        selection: $wakeAt,
+        selection: $wakeDay,
         in: ...Date(),
-        displayedComponents: [.date, .hourAndMinute]
+        displayedComponents: .date
       )
+      HStack {
+        Picker("Hour", selection: $wakeHour) {
+          ForEach(0..<24, id: \.self) { hour in
+            Text(String(format: "%02d", hour)).tag(hour)
+          }
+        }
+        .labelsHidden()
+        Picker("Minute", selection: $wakeMinute) {
+          ForEach(
+            Array(stride(from: 0, to: 60, by: WakeTimeGranularity.minuteStep)),
+            id: \.self
+          ) { minute in
+            Text(String(format: "%02d", minute)).tag(minute)
+          }
+        }
+        .labelsHidden()
+      }
       HStack {
         Spacer()
         Button(L10n.text("action.cancel", appState.language)) { dismiss() }
@@ -236,5 +266,15 @@ private struct ManualWakeEditor: View {
     }
     .padding(20)
     .frame(width: 390)
+  }
+
+  private var wakeAt: Date {
+    let calendar = Calendar.autoupdatingCurrent
+    var components = calendar.dateComponents([.year, .month, .day], from: wakeDay)
+    components.hour = wakeHour
+    components.minute = wakeMinute
+    components.second = 0
+    components.nanosecond = 0
+    return calendar.date(from: components) ?? wakeDay
   }
 }
