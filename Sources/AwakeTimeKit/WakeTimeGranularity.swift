@@ -17,4 +17,15 @@ public enum WakeTimeGranularity {
     components.nanosecond = 0
     return calendar.date(from: components) ?? date
   }
+
+  public static func addingMinutes(
+    _ amount: Int,
+    toHour hour: Int,
+    minute: Int
+  ) -> (hour: Int, minute: Int) {
+    let minutesInDay = 24 * 60
+    let totalMinutes = hour * 60 + minute + amount
+    let normalizedMinutes = (totalMinutes % minutesInDay + minutesInDay) % minutesInDay
+    return (normalizedMinutes / 60, normalizedMinutes % 60)
+  }
 }
