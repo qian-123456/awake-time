@@ -260,8 +260,8 @@ private struct ManualWakeEditor: View {
         TimeUnitControl(
           values: minuteChoices,
           value: $wakeMinute,
-          onIncrement: { adjustMinute(by: 1) },
-          onDecrement: { adjustMinute(by: -1) }
+          onIncrement: { adjustMinute(by: WakeTimeGranularity.minuteStep) },
+          onDecrement: { adjustMinute(by: -WakeTimeGranularity.minuteStep) }
         )
       }
 
@@ -294,7 +294,7 @@ private struct ManualWakeEditor: View {
     let regularChoices = Array(
       stride(from: 0, to: 60, by: WakeTimeGranularity.minuteStep)
     )
-    return Array(Set(regularChoices + [wakeMinute])).sorted()
+    return regularChoices
   }
 
   private func adjustHour(by amount: Int) {
@@ -339,8 +339,7 @@ private struct TimeUnitControl: View {
       }
       .labelsHidden()
       .pickerStyle(.menu)
-      .controlSize(.small)
-      .font(.system(size: 14, weight: .medium, design: .rounded))
+      .controlSize(.regular)
       .frame(width: 46, height: 24)
 
       VStack(spacing: 0) {
