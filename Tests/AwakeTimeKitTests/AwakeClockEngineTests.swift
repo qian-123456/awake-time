@@ -3,6 +3,45 @@ import XCTest
 @testable import AwakeTimeKit
 
 final class AwakeClockEngineTests: XCTestCase {
+  func testWakeTimeFloorsToFiveMinuteStep() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+
+    let cases: [(minute: Int, expected: Int)] = [
+      (0, 0),
+      (4, 0),
+      (5, 5),
+      (9, 5),
+      (59, 55),
+    ]
+
+    for testCase in cases {
+      let date = try XCTUnwrap(
+        calendar.date(
+          from: DateComponents(
+            year: 2026,
+            month: 8,
+            day: 5,
+            hour: 8,
+            minute: testCase.minute,
+            second: 42,
+            nanosecond: 123
+          )
+        )
+      )
+      let floored = WakeTimeGranularity.floorToStep(date, calendar: calendar)
+      let components = calendar.dateComponents(
+        [.hour, .minute, .second, .nanosecond],
+        from: floored
+      )
+
+      XCTAssertEqual(components.hour, 8)
+      XCTAssertEqual(components.minute, testCase.expected)
+      XCTAssertEqual(components.second, 0)
+      XCTAssertEqual(components.nanosecond, 0)
+    }
+  }
+
   func testNoWakeRecordShowsPlaceholder() {
     XCTAssertEqual(AwakeClockEngine.formatted(from: nil, to: Date()), "--:--")
   }
