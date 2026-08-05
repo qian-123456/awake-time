@@ -247,9 +247,8 @@ private struct ManualWakeEditor: View {
       Divider()
         .padding(.vertical, -2)
 
-      HStack(spacing: 6) {
+      HStack(spacing: 8) {
         Label(L10n.text("settings.time", appState.language), systemImage: "clock")
-        Spacer()
         TimeUnitControl(
           values: Array(0..<24),
           value: $wakeHour,
@@ -257,7 +256,7 @@ private struct ManualWakeEditor: View {
           onDecrement: { adjustHour(by: -1) }
         )
         Text(":")
-          .font(.title3.weight(.medium))
+          .font(.system(size: 14, weight: .medium, design: .rounded))
         TimeUnitControl(
           values: minuteChoices,
           value: $wakeMinute,
@@ -330,58 +329,43 @@ private struct TimeUnitControl: View {
   let onDecrement: () -> Void
 
   var body: some View {
-    HStack(spacing: 1) {
-      Menu {
+    HStack(spacing: 4) {
+      Picker("", selection: $value) {
         ForEach(values, id: \.self) { value in
-          Button {
-            self.value = value
-          } label: {
-            Text(String(format: "%02d", value))
-          }
+          Text(String(format: "%02d", value)).tag(value)
         }
-      } label: {
-        HStack(spacing: 3) {
-          Text(String(format: "%02d", value))
-            .monospacedDigit()
-          Image(systemName: "chevron.down")
-            .font(.system(size: 8, weight: .semibold))
-        }
-        .frame(width: 38, height: 22)
-        .background(
-          Color.primary.opacity(0.12),
-          in: RoundedRectangle(cornerRadius: 4)
-        )
       }
-      .menuStyle(.borderlessButton)
-      .buttonStyle(.plain)
-      .menuIndicator(.hidden)
-      .frame(width: 38, height: 22)
+      .labelsHidden()
+      .pickerStyle(.menu)
+      .controlSize(.small)
+      .frame(width: 46, height: 24)
 
       VStack(spacing: 0) {
         Button(action: onIncrement) {
           Image(systemName: "chevron.up")
-            .font(.system(size: 9, weight: .semibold))
-            .frame(width: 28, height: 19)
-            .background(
-              Color.primary.opacity(0.12),
-              in: RoundedRectangle(cornerRadius: 4)
-            )
+            .font(.system(size: 8, weight: .semibold))
+            .frame(width: 26, height: 12)
         }
         .buttonStyle(.plain)
         .help("Increase")
 
+        Divider()
+          .frame(width: 16)
+
         Button(action: onDecrement) {
           Image(systemName: "chevron.down")
-            .font(.system(size: 9, weight: .semibold))
-            .frame(width: 28, height: 19)
-            .background(
-              Color.primary.opacity(0.12),
-              in: RoundedRectangle(cornerRadius: 4)
-            )
+            .font(.system(size: 8, weight: .semibold))
+            .frame(width: 26, height: 12)
         }
         .buttonStyle(.plain)
         .help("Decrease")
       }
+      .frame(width: 26, height: 24)
+      .background(
+        Color.primary.opacity(0.10),
+        in: RoundedRectangle(cornerRadius: 5)
+      )
     }
+    .frame(height: 24)
   }
 }
